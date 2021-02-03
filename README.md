@@ -34,6 +34,21 @@ subroutine md_cyclic_solver(neqs, n_size, nrhs, ma, rhs, x)
     md_type, intent(in) :: rhs(nrhs, n_size, neqs) !求解右端向量
     md_type, intent(out) :: x(nrhs, n_size, neqs) !求解结果
 end subroutine
-//fortran
+```
 
-调用md_cyclic_multi_solver(nas, nbs, n_size, nrhs, pos, ma, rhs, x)求解矩阵A的个数少于右端向量b的个数的情况，其中nas是矩阵A的个数，nbs是右端向量b的个数，pos是维度为()
+调用md_cyclic_multi_solver(nas, nbs, n_size, nrhs, pos, ma, rhs, x)求解矩阵A的个数少于右端向量b的个数的情况，其中nas是矩阵A的个数，nbs是右端向量b的个数，pos是维度为(nbs)的pos数组。用于指定每个b对应的A矩阵在ma数组中的位置。rhs和x均是维度为(nrhs, n_size, nbs)的实数数组，对应右端向量和求解输出。
+比如，同时求解A1x1 = b1, A1x2 = b2, A2x3 = b3，则nas = 2，nbs = 3，pos数组为[1, 1, 2]
+```fortran
+! 批量求解循环三对角方程组，但部分A矩阵可能相同
+! 此时右端向量b的个数多于A矩阵的个数，用pos数组指定每个b对应的矩阵下标
+subroutine md_cyclic_multi_solver(nas, nbs, n_size, nrhs, pos, ma, rhs, x)
+    integer, intent(in) :: nas !循环三对角矩阵A的个数
+    integer, intent(in) :: nbs !右端向量b的个数
+    integer, intent(in) :: n_size !当前进程对应三对角方程的行数
+    integer, intent(in) :: nrhs !每个三对角方程的右端向量个数
+    integer, intent(in) :: pos(nbs) !每个b对应的矩阵下标
+    type(md_matrix), intent(in) :: ma(nas) !预处理结构体，每个方程对应一个
+    md_type, intent(in) :: rhs(nrhs, n_size, nbs) !求解右端向量
+    md_type, intent(out) :: x(nrhs, n_size, nbs) !求解结果
+end subroutine
+```
