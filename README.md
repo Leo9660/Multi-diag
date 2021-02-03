@@ -26,7 +26,14 @@ md_mod模块定义了一个数据结构md_matrix，该数据结构用于存储�
 
 调用md_cyclic_solver(neqs, n_size, nrhs, ma, rhs, x)求解neqs个规模为n_size，右端向量个数为nrhs的并行循环三对角方程组，其中ma是维度为(neqs)的md_matrix结构体数组，rhs和x均是维度为(nrhs, n_size, neqs)的实数数组，对应右端向量输入和求解输出。
 <code fortran>
-  
-  </code>
+subroutine md_cyclic_solver(neqs, n_size, nrhs, ma, rhs, x)
+    integer, intent(in) :: neqs !循环三对角方程个数
+    integer, intent(in) :: n_size !当前进程对应三对角方程的行数
+    integer, intent(in) :: nrhs !每个三对角方程的右端向量个数
+    type(md_matrix), intent(in) :: ma(neqs) !预处理结构体，每个方程对应一个
+    md_type, intent(in) :: rhs(nrhs, n_size, neqs) !求解右端向量
+    md_type, intent(out) :: x(nrhs, n_size, neqs) !求解结果
+end subroutine
+</code>
 
 调用md_cyclic_multi_solver(nas, nbs, n_size, nrhs, pos, ma, rhs, x)求解矩阵A的个数少于右端向量b的个数的情况，其中nas是矩阵A的个数，nbs是右端向量b的个数，pos是维度为()
