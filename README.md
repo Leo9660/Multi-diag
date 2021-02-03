@@ -20,5 +20,13 @@ md_mod模块定义了一个数据结构md_matrix，该数据结构用于存储�
 
 ## 矩阵分解
 
-正式求解前，先调用md_lat_fact(neqs, ma)对循环三对角矩阵进行分解操作，其中neqs为三对角矩阵个数。分解结果存在md_mod自定义结构体md_matrix中，需要用户预分配空间为并保存分解结果。每个三对角方程组对应一个md_matrix结构体。
+正式求解前，先调用md_lat_fact(neqs, ma)对循环三对角矩阵进行分解操作，其中neqs为三对角矩阵个数，ma是维度为(neqs)的md_matrix结构体数组。分解结果存在md_mod自定义结构体md_matrix中，需要用户预分配空间为并保存分解结果。每个三对角方程组对应一个md_matrix结构体。
 
+## 求解接口
+
+调用md_cyclic_solver(neqs, n_size, nrhs, ma, rhs, x)求解neqs个规模为n_size，右端向量个数为nrhs的并行循环三对角方程组，其中ma是维度为(neqs)的md_matrix结构体数组，rhs和x均是维度为(nrhs, n_size, neqs)的实数数组，对应右端向量输入和求解输出。
+<code fortran>
+  
+  </code>
+
+调用md_cyclic_multi_solver(nas, nbs, n_size, nrhs, pos, ma, rhs, x)求解矩阵A的个数少于右端向量b的个数的情况，其中nas是矩阵A的个数，nbs是右端向量b的个数，pos是维度为()
