@@ -9,7 +9,7 @@ enable_language(Fortran)
 set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_Fortran_COMPILER mpiifort)
-set(CMAKE_Fortran_FLAGS "-g -traceback -cpp -lmkl_intel_lp64 -lmkl_sequential -lmkl_core")
+set(CMAKE_Fortran_FLAGS "-g -traceback -cpp -O3")
 
 set(source_files
   src/multi_diag.F90
