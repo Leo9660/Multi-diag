@@ -5,7 +5,7 @@ Parallel multi-diagonal solver module in Fortran
 主目录下运行build.sh脚本，build/文件夹中会编译生成multi_diag_mod.mod和libmd.a文件，对应该模块的编译文件和链接库。
 修改run.sh的提交选项并运行，实现不同并行度的单元测试。
 
-## 接口介绍
+## 接口介绍-多进程循环三对角求解
 md_mod模块提供多进程并行循环三对角方程组Ax = b的快速近似求解方法，注意此时矩阵大小n应该远大于对角线条数（目前支持为3），否则可能出现数值精度问题。md_type和md_size用于指定库的数据类型和数据类型种别值，注意应保持一致，比如md_type为rea(4)时，md_size为4。     
 对外接口代码和注释在src/multi_diag.F90中。
 
@@ -56,4 +56,18 @@ subroutine md_cyclic_multi_solver(nas, nbs, n_size, nrhs, pos, ma, rhs, x)
     md_type, intent(in) :: rhs(nrhs, n_size, nbs) !求解右端向量
     md_type, intent(out) :: x(nrhs, n_size, nbs) !求解结果
 end subroutine
+```
+
+##接口介绍-单进程快速三对角方程求解
+md_mod模块提供单进程串行三对角方程组Ax = b的快速求解方法。md_type和md_size用于指定库的数据类型和数据类型种别值，注意应保持一致，比如md_type为rea(4)时，md_size为4。
+
+调用trd_solver(neqs, nsize, a, b, c, rhs, x)求解neqs个规模位nsize的三对角方程组，a，b，c分别代表三对角矩阵的下副对角线，对角线和上副对角线中的元素，按照从第一行到最后一行的顺序排列，维度为(neqs, nsize)。注意，这里a和c可能存在多余的元素，如三对角中第一行的a(:, 1)和最后一行的c(:, nsize)是无意义的，但由于数据对齐的需要，这里仍将a和c的数组大小开辟为和b相同。rhs和x均是维度为(nsize, neqs)的实数数组，对应右端向量输入和求解输出。
+```fortran
+subroutine trd_solver(neqs, nsize, a, b, c, rhs, x)
+        integer, intent(in) :: neqs !垂向三对角方程个数
+        integer, intent(in) :: nsize !垂向三对角方程的行数
+        md_type, intent(in) :: a(neqs, nsize), b(neqs, nsize), c(neqs, nsize) !代表对角元和两个非对角元
+        md_type, intent(in) :: rhs(neqs, nsize) !求解右端向量
+        md_type, intent(out) :: x(neqs, nsize) !求解结果
+ end subroutine
 ```
