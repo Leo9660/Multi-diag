@@ -17,7 +17,10 @@ program test
 
     type(md_matrix), allocatable, dimension(:) :: matrix
     md_type, allocatable, dimension(:, :, :) :: ma
-    md_type, allocatable, dimension(:, :, :):: b, x
+    md_type, allocatable, dimension(:, :, :) :: b, x
+
+    md_type, allocatable, dimension(:, :) :: a2, b2, c2, d2, x2
+    md_type :: tmp
 
     integer :: i, j, n
 
@@ -37,6 +40,9 @@ program test
     call pos2id(pid, pnum, next, prev)
 
     call md_init(comm, pid, next, prev)
+
+    !!!! 纬圈三对角测试
+
     allocate(matrix(neqs))
     allocate(ma(nnz, n_size, neqs))
     allocate(b(nrhs, n_size, neqs))
@@ -68,18 +74,58 @@ program test
     end do
 
     if (test_flag == 0) then
-        print *, pid, "Correct!"
+        print *, pid, "Parallel Correct!"
     else
-        print *, pid, "Error at", test_flag
+        print *, pid, "Parallel error at", test_flag
     end if
 
-    ! if (pid >= 0) then
-    !     print *, pid, "x1 x2", x(1, 1, 1), x(1, 2, 1)
-    !     print *, pid, "xn-1 xn", x(1, n_size - 1, 1), x(1, n_size, 1)
-    !     print *, pid, "b", b(1, 1, 1), b(1, n_size, 1)
-    !     print *, pid, "a1", ma(1, 1, 1), ma(2, 1, 1), ma(3, 1, 1)
-    !     print *, pid, "a2", ma(1, n_size, 1), ma(2, n_size, 1), ma(3, n_size, 1)
-    ! end if
+    !!!!!
+    
+    !!!! 串行
+
+    n_size = 64
+    neqs = 1
+    allocate(a2(neqs, n_size))
+    allocate(b2(neqs, n_size))
+    allocate(c2(neqs, n_size))
+    allocate(d2(neqs, n_size))
+    allocate(x2(neqs, n_size))
+
+    do i = 1, n_size
+        do j = 1, neqs
+            call random_number(tmp)
+            a2(j, i) = 0.05 + 0.25 * tmp
+            call random_number(tmp)
+            b2(j, i) = 1 + 0.2 * tmp
+            call random_number(tmp)
+            c2(j, i) = 0.05 + 0.25 * tmp
+            call random_number(tmp)
+            d2(j, i) = 100 * tmp
+        end do
+    end do
+
+    call trd_solver(neqs, n_size, a2, b2, c2, d2, x2)
+
+    test_flag = 0
+    do i = 2, n_size - 1
+        do j = 1, neqs
+            test_x = x2(j, i-1) * a2(j, i) + x2(j, i) * b2(j, i) &
+            + x2(j, i+1) * c2(j, i)
+            test_b = d2(j, i)
+            if (test_x - test_b >= 0.00000000001d0) then
+                test_flag = i
+            end if
+        end do
+    end do
+
+    if (test_flag == 0) then
+        print *, pid, "Sequential Correct!"
+    else
+        print *, pid, "Sequential error at", test_flag
+    end if
+
+    !!!!!
+
 
     do i = 1, neqs
         call deallocate_md_matrix(matrix(i))

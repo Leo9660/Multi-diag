@@ -12,6 +12,8 @@ module multi_diag_mod
 
     implicit none
 
+    private
+
     ! process id
     integer :: pid
     integer :: next_id
@@ -36,7 +38,10 @@ module multi_diag_mod
         !SPIKE分解用数据(lnz, lnz)，w_next为下个划分的wt，v_prev为上个划分的vb
     end type md_matrix
 
-    private pid, next_id, prev_id, single_process, comm
+    !private pid, next_id, prev_id, single_process, comm
+    public md_init, md_cyclic_fact, md_cyclic_solver, &
+    md_cyclic_multi_solver, trd_solver, md_matrix, &
+    allocate_md_matrix, deallocate_md_matrix
 
 contains
     subroutine md_init(comm_in, rank, next_rank, prev_rank)
@@ -101,19 +106,23 @@ contains
         call md_cyclic_multi_solver_kernel(nas, nbs, n_size, nrhs, pos, ma, rhs, x)
     end subroutine
 
-    ! subroutine md_single_solver(neqs, nsize, a, b, c, rhs, x)
-    !     integer, intent(in) :: neqs !垂向三对角方程个数
-    !     integer, intent(in) :: nsize !垂向三对角方程的行数
-    !     md_type, intent(in) :: a(neqs, nsize), b(neqs, nsize), c(neqs, nsize) !代表对角元和两个非对角元
-    !     md_type, intent(in) :: rhs(neqs, nsize) !求解右端向量
-    !     md_type, intent(out) :: x(neqs, nsize) !求解结果
-    ! end subroutine
+    subroutine trd_solver(neqs, nsize, a, b, c, rhs, x)
+        integer, intent(in) :: neqs !垂向三对角方程个数
+        integer, intent(in) :: nsize !垂向三对角方程的行数
+        md_type, intent(in) :: a(neqs, nsize), b(neqs, nsize), c(neqs, nsize) !代表对角元和两个非对角元
+        md_type, intent(in) :: rhs(neqs, nsize) !求解右端向量
+        md_type, intent(out) :: x(neqs, nsize) !求解结果
+
+        call trd_single_solver_kernel(neqs, nsize, a, b, c, rhs, x)
+    end subroutine
 
 #include "cyclic.F90"
 
 #include "memory.F90"
 
 #include "struct_sptrsv.F90"
+
+#include "trd_single.F90"
 
 end module
 
